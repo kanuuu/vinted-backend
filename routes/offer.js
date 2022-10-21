@@ -54,6 +54,19 @@ router.post("/offer/publish", isAuth, fileUpload(), async (req, res) => {
       );
       newOffer.product_image = offerPic;
     }
+
+    if (req.files?.pics) {
+      for (let i = 0; i < req.files.pics.length; i++) {
+        const offerPics = await cloudinary.uploader.upload(
+          convertToBase64(req.files.pics[i]),
+          {
+            folder: `vinted/offers/${newOffer.id}`,
+          }
+        );
+        newOffer.product_pictures.push(offerPics);
+      }
+    }
+
     await newOffer.save();
 
     res.status(200).json(newOffer);
@@ -79,8 +92,17 @@ router.put("/offer/edit", isAuth, fileUpload(), async (req, res) => {
       });
     }
 
-    const { title, desc, price, condition, city, brand, size, color } =
-      req.body;
+    const {
+      title,
+      desc,
+      price,
+      condition,
+      city,
+      brand,
+      size,
+      color,
+      picToEdit,
+    } = req.body;
     if (offer === null) {
       return res.status(400).json("No offer found");
     }
@@ -109,6 +131,20 @@ router.put("/offer/edit", isAuth, fileUpload(), async (req, res) => {
       offer.product_image = newPic;
     }
 
+    //testing // one by one editing
+    if (req.files?.pics) {
+      await cloudinary.uploader.destroy(
+        offer.product_pictures[picToEdit].public_id
+      );
+      const newPic = await cloudinary.uploader.upload(
+        convertToBase64(req.files.pics),
+        {
+          folder: `vinted/offers/${offer.id}`,
+        }
+      );
+      offer.product_pictures[picToEdit] = newPic;
+    }
+
     await offer.save();
 
     res.status(200).json(offer);
@@ -131,9 +167,14 @@ router.delete("/offer/delete", isAuth, fileUpload(), async (req, res) => {
     }
 
     if (offer?.product_image?.public_id) {
-      const offerPics = offer.product_image.public_id;
+      const offerPics = [];
+      offerPics.push(offer.product_image.public_id);
 
-      await cloudinary.uploader.destroy(offerPics);
+      for (let i = 0; i < offer.product_pictures.length; i++) {
+        offerPics.push(offer.product_pictures[i].public_id);
+      }
+
+      await cloudinary.api.delete_resources(offerPics);
       await cloudinary.api.delete_folder(`/vinted/offers/${req.body.id}`);
     }
 
