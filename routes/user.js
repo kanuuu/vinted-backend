@@ -17,7 +17,7 @@ const convertToBase64 = (file) => {
 router.post("/user/signup", fileUpload(), async (req, res) => {
   try {
     const { username, email, password, newsletter } = req.body;
-    if (!username || !email || !password || !newsletter || !req.files) {
+    if (!username || !email || !password || !newsletter) {
       return res.status(400).json({
         error: {
           message: "Missing parameter",
@@ -43,13 +43,15 @@ router.post("/user/signup", fileUpload(), async (req, res) => {
       hash: hash,
       salt: salt,
     });
-    const avatarToUpload = await cloudinary.uploader.upload(
-      convertToBase64(avatar),
-      {
-        folder: `vinted/users/${user.id}`,
-      }
-    );
-    user.account = { username: username, avatar: avatarToUpload };
+    if (req.files?.picture) {
+      const avatarToUpload = await cloudinary.uploader.upload(
+        convertToBase64(avatar),
+        {
+          folder: `vinted/users/${user.id}`,
+        }
+      );
+      user.account = { username: username, avatar: avatarToUpload };
+    }
 
     await user.save();
 
