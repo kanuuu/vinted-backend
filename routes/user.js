@@ -4,7 +4,6 @@ const uid2 = require("uid2");
 const SHA256 = require("crypto-js/sha256");
 const encBase64 = require("crypto-js/enc-base64");
 const isAuth = require("../middlewares/isAuth");
-const Offer = require("../models/Offer");
 const fileUpload = require("express-fileupload");
 const cloudinary = require("cloudinary").v2;
 
@@ -37,6 +36,7 @@ router.post("/user/signup", fileUpload(), async (req, res) => {
 
     const user = new User({
       email: email,
+      account: { username: username },
       newsletter: newsletter,
       token: token,
       hash: hash,
@@ -50,14 +50,13 @@ router.post("/user/signup", fileUpload(), async (req, res) => {
           folder: `vinted/users/${user.id}`,
         }
       );
-      user.account = { username: username, avatar: avatarToUpload };
+      user.account.avatar = avatarToUpload;
     }
 
     await user.save();
 
     res.status(200).json({
-      username: user.account.username,
-      avatar: user.account.avatar.secure_url,
+      account: user.account,
       email: user.email,
       newsletter: user.newsletter,
       token: user.token,
