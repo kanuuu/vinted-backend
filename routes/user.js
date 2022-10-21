@@ -24,7 +24,6 @@ router.post("/user/signup", fileUpload(), async (req, res) => {
         },
       });
     }
-    const { avatar } = req.files;
     const salt = uid2(16);
     const hash = SHA256(password + salt).toString(encBase64);
     const token = uid2(64);
@@ -43,9 +42,10 @@ router.post("/user/signup", fileUpload(), async (req, res) => {
       hash: hash,
       salt: salt,
     });
+
     if (req.files?.picture) {
       const avatarToUpload = await cloudinary.uploader.upload(
-        convertToBase64(avatar),
+        convertToBase64(req.files.picture),
         {
           folder: `vinted/users/${user.id}`,
         }
