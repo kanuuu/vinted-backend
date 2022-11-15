@@ -19,6 +19,7 @@ app.use(express.json());
 mongoose.connect(process.env.MONGODB_URI);
 app.use(require("./routes/user"));
 app.use(require("./routes/offer"));
+app.use(require("./routes/payment"));
 app.get("/", (req, res) => {
   res.json("🍥");
 });

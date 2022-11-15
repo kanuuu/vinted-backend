@@ -16,7 +16,7 @@ const convertToBase64 = (file) => {
 router.post("/user/signup", fileUpload(), async (req, res) => {
   try {
     const { username, email, password, newsletter } = req.body;
-    if (!username || !email || !password || !newsletter) {
+    if (!username || !email || !password) {
       return res.status(400).json({
         error: {
           message: "Missing parameter",
@@ -56,6 +56,7 @@ router.post("/user/signup", fileUpload(), async (req, res) => {
     await user.save();
 
     res.status(200).json({
+      id: user.id,
       account: user.account,
       email: user.email,
       newsletter: user.newsletter,
@@ -81,7 +82,7 @@ router.post("/user/login", async (req, res) => {
         token: user.token,
         account: {
           username: user.account.username,
-          avatar: user.account.avatar.secure_url,
+          avatar: user.account?.avatar?.secure_url,
         },
       });
     }

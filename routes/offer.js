@@ -198,7 +198,11 @@ router.get("/offers", async (req, res) => {
     }
 
     if (priceMin) {
-      filters.product_price = { $gte: parseInt(priceMin) };
+      if (!filters.product_price) {
+        filters.product_price = { $gte: parseInt(priceMin) };
+      } else {
+        filters.product_price.$gte = parseInt(priceMin);
+      }
     } else {
       filters.product_price = { $gte: 0 };
     }
@@ -209,8 +213,6 @@ router.get("/offers", async (req, res) => {
       } else {
         filters.product_price.$lte = parseInt(priceMax);
       }
-    } else {
-      filters.product_price = { $lte: 100000 };
     }
 
     if (sort === "price-asc") {
@@ -225,7 +227,8 @@ router.get("/offers", async (req, res) => {
     const offers = await Offer.find(filters)
       .sort(sortFilter)
       .limit(itemsPerPage)
-      .skip(pageIndex);
+      .skip(pageIndex)
+      .populate("owner");
     //.select("product_name product_price");
 
     const offerCount = await Offer.countDocuments(filters);
